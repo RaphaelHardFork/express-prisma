@@ -16,6 +16,11 @@ app.get("/", async (req, res) => {
   res.send(allUsers)
 })
 
+app.get("/posted", async (req, res) => {
+  const allPosts = await prisma.posts.findMany()
+  res.send(allPosts)
+})
+
 app.get("/logins", async (req, res) => {
   const users = await prisma.users.findMany({
     select: { login: true },
@@ -49,16 +54,27 @@ app.post("/add", async (req, res) => {
 
 app.post("/post", async (req, res) => {
   const userID = await prisma.users.findUnique({
-    select: {},
+    select: { id: true },
+    where: { login: req.body.login },
   })
   const result = await prisma.posts.create({
     data: {
       title: req.body.title,
       content: req.body.content,
+      authorId: userID.id,
     },
   })
+  res.send(`The post n°${result.id} has been published by ${req.body.login}`)
 })
 
 app.listen(PORT, IP_LOOPBACK, () => {
   console.log(`APP listening at http://${IP_LOOPBACK}:${PORT}/`)
 })
+
+/*
+obj = {
+  "login": "mikki",
+  "title": "La belle vie",
+  "content": "très beau discours sur la vie",
+}
+*/
